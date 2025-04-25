@@ -1,0 +1,213 @@
+// ===== العناصر الرئيسية =====
+const voiceBtn = document.getElementById('voiceBtn');
+const statusEl = document.getElementById('status');
+const conversationEl = document.getElementById('conversation');
+
+// ===== حالة التطبيق =====
+let isListening = false;
+let recognition;
+
+// ===== قاعدة المعرفة المحسنة =====
+const knowledgeBase = {
+    "الذكاء": "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية. أهم نظريات الذكاء هي نظرية جاردنر للذكاءات المتعددة ونظرية سبيرمان للعامل العام.",
+    "نظرية جاردنر": "نظرية الذكاءات المتعددة تقسم الذكاء إلى 8 أنواع: لغوي، منطقي-رياضي، مكاني، جسدي-حركي، موسيقي، بين شخصي، داخل شخصي، وطبيعي. طورها هوارد جاردنر عام 1983.",
+    "الذكاء العاطفي": "هو القدرة على فهم وإدارة العواطف. يتكون من 5 عناصر: الوعي الذاتي، التنظيم الذاتي، التحفيز، التعاطف، والمهارات الاجتماعية.",
+    "التعلم": "أفضل طرق التعلم تشمل: التكرار المتباعد، الممارسة المتغيرة، والاختبار الذاتي. حسب الأبحاث، هذه الطرق تحسن الاحتفاظ بالمعلومات بنسبة 50-70%.",
+    "نظريات التعلم": "أهم نظريات التعلم هي: النظرية السلوكية (سكنر، بافلوف)، النظرية المعرفية (بياجيه)، والنظرية البنائية الاجتماعية (فيجوتسكي).",
+    "اضطرابات التعلم": "هي صعوبات في اكتساب المهارات الأكاديمية مثل القراءة (عسر القراءة) أو الكتابة (عسر الكتابة) أو الحساب (عسر الحساب). تتطلب تدخلات تعليمية متخصصة.",
+    "تحفيز الطلاب": "لتحفيز الطلاب: استخدم التعزيز الإيجابي، حدد أهدافًا واضحة، اجعل التعلم ممتعًا، واربط الدروس بحياتهم اليومية."
+};
+
+// ===== تهيئة التعرف الصوتي =====
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        throw new Error('المتصفح لا يدعم التعرف على الصوت');
+    }
+    
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ar-SA';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false; // التوقف بعد نهاية الكلام
+    
+    recognition.onstart = () => {
+        isListening = true;
+        voiceBtn.classList.add('active');
+        statusEl.textContent = "جاري الاستماع...";
+    };
+    
+    recognition.onresult = async (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        await handleUserCommand(transcript);
+    };
+    
+    recognition.onerror = (event) => {
+        console.error('حدث خطأ:', event.error);
+        showError(getErrorMessage(event.error));
+        resetState();
+    };
+    
+    recognition.onend = () => {
+        resetState();
+    };
+    
+    return recognition;
+}
+
+// ===== معالجة الأخطاء =====
+function getErrorMessage(error) {
+    const errors = {
+        'no-speech': 'لم يتم اكتشاف كلام',
+        'audio-capture': 'لا يمكن الوصول للميكروفون',
+        'not-allowed': 'تم رفض الإذن',
+        'language-not-supported': 'اللغة غير مدعومة'
+    };
+    return errors[error] || 'حدث خطأ غير متوقع';
+}
+
+// ===== التعامل مع الأوامر =====
+async function handleUserCommand(command) {
+    try {
+        addMessage(command, 'user');
+        statusEl.textContent = "جاري المعالجة...";
+        
+        // تأخير لمحاكاة معالجة البيانات
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const response = generateResponse(command);
+        addMessage(response, 'assistant');
+        
+        // النطق باستخدام ResponsiveVoice
+        speakWithResponsiveVoice(response);
+        
+    } catch (error) {
+        console.error('حدث خطأ:', error);
+        addMessage("حدث خطأ أثناء المعالجة", 'error');
+    } finally {
+        statusEl.textContent = "اضغط على الزر الأحمر للتحدث";
+    }
+}
+
+// ===== توليد الرد =====
+function generateResponse(command) {
+    command = command.toLowerCase();
+    
+    // البحث عن أفضل تطابق
+    let bestMatch = null;
+    let maxKeywords = 0;
+    
+    for (const [keyword, response] of Object.entries(knowledgeBase)) {
+        const keywords = keyword.split(' ');
+        const matchCount = keywords.filter(kw => command.includes(kw.toLowerCase())).length;
+        
+        if (matchCount > maxKeywords) {
+            maxKeywords = matchCount;
+            bestMatch = response;
+        }
+    }
+    
+    return bestMatch || "أسف، لا أملك معلومات عن هذا الموضوع. يمكنك سؤالي عن: الذكاء، نظريات التعلم، أو الذكاء العاطفي";
+}
+
+// ===== النطق باستخدام ResponsiveVoice =====
+function speakWithResponsiveVoice(text) {
+    try {
+        // إيقاف أي كلام جاري
+        responsiveVoice.cancel();
+        
+        // استخدام الصوت العربي الأنثوي
+        responsiveVoice.speak(text, "Arabic Female", {
+            rate: 0.9,  // سرعة الكلام
+            pitch: 1,   // نبرة الصوت
+            onstart: () => console.log('بدأ النطق'),
+            onend: () => console.log('انتهى النطق')
+        });
+    } catch (error) {
+        console.error('خطأ في ResponsiveVoice:', error);
+        // الرجوع إلى Web Speech API إذا فشل ResponsiveVoice
+        speakFallback(text);
+    }
+}
+
+// ===== دالة احتياطية للنطق =====
+function speakFallback(text) {
+    return new Promise((resolve) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ar-SA';
+        utterance.onend = resolve;
+        window.speechSynthesis.speak(utterance);
+    });
+}
+
+// ===== إضافة رسالة للدردشة =====
+function addMessage(text, type) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
+    
+    let messageClass = 'assistant-message';
+    if (type === 'user') messageClass = 'user-message';
+    if (type === 'error') messageClass = 'error-message';
+    
+    messageDiv.innerHTML = `<div class="${messageClass}">${text}</div>`;
+    conversationEl.appendChild(messageDiv);
+    conversationEl.scrollTop = conversationEl.scrollHeight;
+}
+
+// ===== عرض الخطأ =====
+function showError(message) {
+    statusEl.textContent = message;
+    statusEl.style.color = '#ff4757';
+    setTimeout(() => {
+        statusEl.textContent = "اضغط على الزر الأحمر للتحدث";
+        statusEl.style.color = '#666';
+    }, 3000);
+}
+
+// ===== إعادة تعيين الحالة =====
+function resetState() {
+    isListening = false;
+    voiceBtn.classList.remove('active');
+    statusEl.textContent = "اضغط على الزر الأحمر للتحدث";
+    if (recognition) {
+        recognition.stop();
+    }
+}
+
+// ===== حدث الضغط على الزر =====
+voiceBtn.addEventListener('click', async () => {
+    try {
+        if (!isListening) {
+            // بدء الاستماع
+            if (!recognition) {
+                recognition = initSpeechRecognition();
+            }
+            
+            // طلب إذن الميكروفون
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            recognition.start();
+        } else {
+            // إيقاف الاستماع
+            resetState();
+        }
+    } catch (error) {
+        console.error('حدث خطأ:', error);
+        showError(error.message);
+        resetState();
+    }
+});
+
+// ===== التهيئة الأولية =====
+window.addEventListener('load', () => {
+    // رسالة ترحيبية صوتية (تتطلب تفاعل المستخدم أولاً)
+    voiceBtn.addEventListener('click', () => {
+        if (!isListening) {
+            speakWithResponsiveVoice("مرحباً، أنا ذكية. اضغط على الزر الأحمر وابدأ بالتحدث معي");
+        }
+    }, { once: true });
+    
+    // تفعيل ResponsiveVoice (مطلوب تفعيل بواسطة حدث مستخدم)
+    responsiveVoice.enableWindowClickHook();
+});
