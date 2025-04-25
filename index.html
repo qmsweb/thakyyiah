@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ذكية - المساعد الصوتي لعلم النفس التربوي</title>
+    <style>
+        body {
+            font-family: 'Tajawal', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: #6c63ff;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .voice-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .voice-btn {
+            background: #6c63ff;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 0;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .voice-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(108, 99, 255, 0.3);
+        }
+
+        .voice-btn.active {
+            background: #ff4757;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        #voiceIcon {
+            width: 40px;
+            height: 40px;
+        }
+
+        #status {
+            color: #666;
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .conversation {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-start;
+        }
+
+        .message.assistant {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+        }
+
+        .user .bubble {
+            background: #e3f2fd;
+            border-bottom-left-radius: 5px;
+        }
+
+        .assistant .bubble {
+            background: #6c63ff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .error {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            margin-left: 5px;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #6c63ff;
+            border-radius: 50%;
+            margin-right: 3px;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://via.placeholder.com/80" alt="شعار ذكية" class="logo">
+            <h1>ذكية</h1>
+            <p class="subtitle">المساعد الصوتي لعلم النفس التربوي</p>
+        </header>
+
+        <div class="voice-container">
+            <button id="voiceBtn" class="voice-btn">
+                <img src="https://via.placeholder.com/40" alt="زر التحدث" id="voiceIcon">
+            </button>
+            <p id="status">اضغط على الزر للتحدث</p>
+        </div>
+
+        <div class="conversation" id="conversation">
+            <div class="message assistant">
+                <div class="bubble">مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. كيف يمكنني مساعدتك اليوم؟</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // العناصر الرئيسية
+        const voiceBtn = document.getElementById('voiceBtn');
+        const statusEl = document.getElementById('status');
+        const conversationEl = document.getElementById('conversation');
+        const voiceIcon = document.getElementById('voiceIcon');
+
+        // حالة التطبيق
+        let isListening = false;
+        let recognition;
+        const synth = window.speechSynthesis;
+        let voices = [];
+
+        // قاعدة المعرفة النفسية التربوية
+        const knowledgeBase = {
+            "الذكاء": "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية والاجتماعية. حسب نظرية جاردنر للذكاءات المتعددة يوجد 8 أنواع من الذكاء.",
+            "نظرية جاردنر": "نظرية الذكاءات المتعددة تحدد 8 أنواع: لغوي، منطقي-رياضي، مكاني، جسدي-حركي، موسيقي، بين شخصي، داخل شخصي، وطبيعي.",
+            "الذكاء العاطفي": "هو القدرة على فهم وإدارة العواطف الشخصية وعواطف الآخرين. يعتبر عاملاً مهماً في النجاح الأكاديمي والمهني.",
+            "التعلم": "أفضل طرق التعلم تشمل الممارسة الموزعة، الاختبار الذاتي، والتكامل بين المفاهيم الجديدة والمعرفة السابقة.",
+            "التربية": "التربية الفعالة تعتمد على فهم الفروق الفردية في الذكاء وتوفير بيئة تعلم غنية تحفز مختلف أنواع الذكاء."
+        };
+
+        // تهيئة التعرف الصوتي
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                showError("المتصفح لا يدعم التعرف الصوتي");
+                return null;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'ar-SA';
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateUI();
+                showStatus("جاري الاستماع...");
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.trim();
+                handleUserInput(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                showError("حدث خطأ في التعرف على الصوت: " + event.error);
+                resetState();
+            };
+
+            recognition.onend = () => {
+                if (isListening) {
+                    recognition.start();
+                }
+            };
+
+            return recognition;
+        }
+
+        // التعامل مع مدخلات المستخدم
+        async function handleUserInput(input) {
+            addMessage(input, 'user');
+            showTypingIndicator();
+            
+            // محاكاة معالجة الاستجابة
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            hideTypingIndicator();
+            const response = generateResponse(input);
+            addMessage(response, 'assistant');
+            await speak(response);
+        }
+
+        // توليد الرد المناسب
+        function generateResponse(input) {
+            input = input.toLowerCase();
+            
+            // البحث عن أفضل تطابق في قاعدة المعرفة
+            for (const [keyword, response] of Object.entries(knowledgeBase)) {
+                if (input.includes(keyword.toLowerCase())) {
+                    return response;
+                }
+            }
+            
+            // الرد الافتراضي
+            const defaultResponses = [
+                "يمكنك سؤالي عن نظريات الذكاء أو أساليب التعلم الفعالة",
+                "أنا متخصصة في علم النفس التربوي. هل لديك استفسار عن الذكاء العاطفي؟",
+                "أسعد بالإجابة عن أسئلتك في مجال علم النفس التربوي وتنمية الذكاء"
+            ];
+            
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        // وظيفة التحدث
+        function speak(text) {
+            return new Promise((resolve) => {
+                synth.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ar-SA';
+                utterance.rate = 0.85;
+                utterance.pitch = 1.1;
+                
+                // اختيار أفضل صوت عربي
+                const arabicVoices = voices.filter(v => v.lang.includes('ar'));
+                if (arabicVoices.length > 0) {
+                    utterance.voice = arabicVoices.find(v => v.name.includes('Female')) || arabicVoices[0];
+                }
+                
+                utterance.onend = resolve;
+                synth.speak(utterance);
+            });
+        }
+
+        // إضافة رسالة إلى المحادثة
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `<div class="bubble">${text}</div>`;
+            conversationEl.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        // عرض حالة التطبيق
+        function showStatus(text, isError = false) {
+            statusEl.textContent = text;
+            statusEl.className = isError ? 'error' : '';
+        }
+
+        function showError(text) {
+            showStatus(text, true);
+            setTimeout(() => showStatus("اضغط على الزر للتحدث"), 3000);
+        }
+
+        // مؤشر الكتابة
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="bubble">
+                    ذكية تكتب
+                    <span class="typing-indicator">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </span>
+                </div>
+            `;
+            conversationEl.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // التمرير إلى الأسفل
+        function scrollToBottom() {
+            conversationEl.scrollTop = conversationEl.scrollHeight;
+        }
+
+        // تحديث واجهة المستخدم
+        function updateUI() {
+            voiceBtn.classList.toggle('active', isListening);
+            voiceIcon.src = isListening ? 
+                'https://via.placeholder.com/40/ff4757/ffffff?text=...' : 
+                'https://via.placeholder.com/40/6c63ff/ffffff?text=🎤';
+        }
+
+        // إعادة تعيين الحالة
+        function resetState() {
+            isListening = false;
+            updateUI();
+            showStatus("اضغط على الزر للتحدث");
+        }
+
+        // تحميل الأصوات المتاحة
+        function loadVoices() {
+            return new Promise((resolve) => {
+                voices = synth.getVoices();
+                if (voices.length > 0) {
+                    resolve(voices);
+                } else {
+                    synth.onvoiceschanged = () => {
+                        voices = synth.getVoices();
+                        resolve(voices);
+                    };
+                }
+            });
+        }
+
+        // حدث الضغط على زر الميكروفون
+        voiceBtn.addEventListener('click', async () => {
+            if (!isListening) {
+                if (!recognition) {
+                    recognition = initSpeechRecognition();
+                }
+                
+                if (recognition) {
+                    await loadVoices();
+                    recognition.start();
+                }
+            } else {
+                recognition.stop();
+                resetState();
+            }
+        });
+
+        // التهيئة الأولية عند تحميل الصفحة
+        window.addEventListener('load', async () => {
+            await loadVoices();
+            
+            // اختبار دعم المتصفح
+            if (!('webkitSpeechRecognition' in window) {
+                showError("المتصفح غير مدعوم. يرجى استخدام Chrome أو Edge");
+                voiceBtn.disabled = true;
+            } else if (voices.filter(v => v.lang.includes('ar')).length === 0) {
+                showError("لا توجد أصوات عربية متاحة. قد لا يعمل الصوت بشكل صحيح");
+            }
+        });
+    </script>
+</body>
+</html>
