@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ذكية - المساعد الصوتي لعلم النفس التربوي</title>
+    <title>ذكية - المساعد الصوتي</title>
     <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/annyang/2.6.1/annyang.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
         
@@ -33,13 +32,6 @@
         h1 {
             color: #6c63ff;
             margin-bottom: 10px;
-            font-size: 28px;
-        }
-        
-        .subtitle {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 16px;
         }
         
         .voice-btn {
@@ -54,7 +46,6 @@
             justify-content: center;
             align-items: center;
             transition: all 0.3s;
-            outline: none;
         }
         
         .voice-btn:hover {
@@ -77,7 +68,6 @@
             color: #666;
             margin: 15px 0;
             min-height: 20px;
-            font-size: 14px;
         }
         
         .conversation {
@@ -103,7 +93,6 @@
             display: inline-block;
             max-width: 80%;
             text-align: right;
-            margin-left: auto;
         }
         
         .assistant-message {
@@ -114,7 +103,6 @@
             display: inline-block;
             max-width: 80%;
             text-align: right;
-            margin-left: auto;
         }
         
         .error-message {
@@ -124,205 +112,185 @@
             border-radius: 18px;
             display: inline-block;
             max-width: 80%;
-            text-align: right;
-            margin-left: auto;
-        }
-        
-        .mic-icon {
-            width: 30px;
-            height: 30px;
-        }
-        
-        .wake-word-status {
-            font-size: 12px;
-            color: #6c63ff;
-            margin-top: 10px;
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 15px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
-            
-            .conversation {
-                max-height: 250px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>ذكية</h1>
-        <p class="subtitle">المساعد الصوتي لعلم النفس التربوي</p>
+        <p>المساعد الصوتي لعلم النفس التربوي</p>
         
-        <button id="voiceBtn" class="voice-btn" aria-label="زر التحدث" style="display: none;">
-            <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+        <button id="voiceBtn" class="voice-btn" aria-label="زر التحدث">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="white">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
             </svg>
         </button>
         
-        <p id="status">قل "ذكية" لبدء المحادثة</p>
-        <p class="wake-word-status" id="wakeWordStatus">حالة كلمة الإيقاظ: جاهزة</p>
+        <p id="status">انقر على الزر وقل "ذكية" ثم اسأل سؤالك</p>
         
         <div class="conversation" id="conversation">
             <div class="message">
-                <div class="assistant-message">مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. قل "ذكية" ثم اسألني عن الذكاء أو نظريات التعلم</div>
+                <div class="assistant-message">مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. انقر على الزر وقل "ذكية" ثم اسألني</div>
             </div>
         </div>
     </div>
 
     <script>
-        // ===== العناصر الرئيسية =====
+        // العناصر
         const voiceBtn = document.getElementById('voiceBtn');
         const statusEl = document.getElementById('status');
         const conversationEl = document.getElementById('conversation');
-        const wakeWordStatusEl = document.getElementById('wakeWordStatus');
         
-        // ===== حالة التطبيق =====
+        // الحالات
         let isListening = false;
-        let isSpeaking = false;
         let recognition;
-        let wakeWordDetected = false;
+        let waitingForCommand = false;
         
-        // ===== قاعدة المعرفة المحسنة =====
+        // قاعدة المعرفة
         const knowledgeBase = {
             "الذكاء": "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية. أهم نظريات الذكاء هي نظرية جاردنر للذكاءات المتعددة ونظرية سبيرمان للعامل العام.",
             "نظرية جاردنر": "نظرية الذكاءات المتعددة تقسم الذكاء إلى 8 أنواع: لغوي، منطقي-رياضي، مكاني، جسدي-حركي، موسيقي، بين شخصي، داخل شخصي، وطبيعي. طورها هوارد جاردنر عام 1983.",
-            "الذكاء العاطفي": "هو القدرة على فهم وإدارة العواطف. يتكون من 5 عناصر: الوعي الذاتي، التنظيم الذاتي، التحفيز، التعاطف، والمهارات الاجتماعية.",
-            "التعلم": "أفضل طرق التعلم تشمل: التكرار المتباعد، الممارسة المتغيرة، والاختبار الذاتي. حسب الأبحاث، هذه الطرق تحسن الاحتفاظ بالمعلومات بنسبة 50-70%.",
-            "نظريات التعلم": "أهم نظريات التعلم هي: النظرية السلوكية (سكنر، بافلوف)، النظرية المعرفية (بياجيه)، والنظرية البنائية الاجتماعية (فيجوتسكي).",
-            "اضطرابات التعلم": "هي صعوبات في اكتساب المهارات الأكاديمية مثل القراءة (عسر القراءة) أو الكتابة (عسر الكتابة) أو الحساب (عسر الحساب). تتطلب تدخلات تعليمية متخصصة.",
-            "تحفيز الطلاب": "لتحفيز الطلاب: استخدم التعزيز الإيجابي، حدد أهدافًا واضحة، اجعل التعلم ممتعًا، واربط الدروس بحياتهم اليومية."
+            "الذكاء العاطفي": "هو القدرة على فهم وإدارة العواطف. يتكون من 5 عناصر: الوعي الذاتي، التنظيم الذاتي، التحفيز، التعاطف، والمهارات الاجتماعية."
         };
         
-        // ===== تهيئة التعرف على كلمة الإيقاظ =====
-        function initWakeWordDetection() {
-            if (!annyang) {
-                console.error('annyang غير متوفرة');
-                showError("المتصفح لا يدعم ميزة كلمة الإيقاظ");
-                voiceBtn.style.display = 'block';
-                return;
-            }
-            
-            // إضافة أمر لكلمة الإيقاظ "ذكية"
-            const commands = {
-                'ذكية': function() {
-                    if (!wakeWordDetected && !isSpeaking) {
-                        wakeWordDetected = true;
-                        wakeWordStatusEl.textContent = "حالة كلمة الإيقاظ: تم التعرف عليها";
-                        startListening();
-                        
-                        // إعادة تعيين بعد 3 ثواني إذا لم يبدأ المستخدم بالكلام
-                        setTimeout(() => {
-                            if (!isListening) {
-                                wakeWordDetected = false;
-                                wakeWordStatusEl.textContent = "حالة كلمة الإيقاظ: جاهزة";
-                            }
-                        }, 3000);
-                    }
-                }
-            };
-            
-            annyang.addCommands(commands);
-            
-            // بدء الاستماع لكلمة الإيقاظ
-            annyang.start({
-                autoRestart: true,
-                continuous: false
-            });
-            
-            annyang.addCallback('error', (err) => {
-                console.error('خطأ في التعرف على الصوت:', err);
-                wakeWordStatusEl.textContent = "حالة كلمة الإيقاظ: معطلة";
-                voiceBtn.style.display = 'block';
-            });
-            
-            annyang.addCallback('soundstart', () => {
-                wakeWordStatusEl.textContent = "حالة كلمة الإيقاظ: جاري التحليل...";
-            });
-        }
-        
-        // ===== تهيئة التعرف الصوتي =====
+        // تهيئة التعرف الصوتي
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            
             if (!SpeechRecognition) {
-                throw new Error('المتصفح لا يدعم التعرف على الصوت');
+                showError("المتصفح لا يدعم التعرف على الصوت");
+                return null;
             }
             
-            recognition = new SpeechRecognition();
-            recognition.lang = 'ar-SA';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+            const recognizer = new SpeechRecognition();
+            recognizer.lang = 'ar-SA';
+            recognizer.interimResults = false;
+            recognizer.maxAlternatives = 1;
             
-            recognition.onstart = () => {
+            recognizer.onstart = () => {
                 isListening = true;
-                wakeWordDetected = false;
                 voiceBtn.classList.add('active');
                 statusEl.textContent = "جاري الاستماع...";
-                wakeWordStatusEl.textContent = "حالة كلمة الإيقاظ: جاري تسجيل السؤال...";
             };
             
-            recognition.onresult = async (event) => {
-                const transcript = event.results[0][0].transcript.trim();
-                await handleUserCommand(transcript);
+            recognizer.onresult = (e) => {
+                const transcript = e.results[0][0].transcript.trim();
+                processVoiceCommand(transcript);
             };
             
-            recognition.onerror = (event) => {
-                console.error('حدث خطأ:', event.error);
-                showError(getErrorMessage(event.error));
+            recognizer.onerror = (e) => {
+                console.error("خطأ:", e.error);
+                showError(getErrorMessage(e.error));
                 resetState();
             };
             
-            recognition.onend = () => {
-                if (isListening && !isSpeaking) {
+            recognizer.onend = () => {
+                if (isListening) recognizer.start();
+            };
+            
+            return recognizer;
+        }
+        
+        // معالجة الأوامر الصوتية
+        function processVoiceCommand(transcript) {
+            if (!waitingForCommand) {
+                if (transcript.includes("ذكية")) {
+                    waitingForCommand = true;
+                    addMessage("نعم تفضل بسؤالك", "assistant");
+                    speakWithResponsiveVoice("نعم تفضل بسؤالك");
+                }
+                return;
+            }
+            
+            waitingForCommand = false;
+            addMessage(transcript, "user");
+            
+            const response = findBestResponse(transcript);
+            addMessage(response, "assistant");
+            speakWithResponsiveVoice(response);
+        }
+        
+        // البحث عن أفضل رد
+        function findBestResponse(command) {
+            command = command.toLowerCase();
+            for (const [keyword, response] of Object.entries(knowledgeBase)) {
+                if (command.includes(keyword.toLowerCase())) {
+                    return response;
+                }
+            }
+            return "عذراً، لا أملك معلومات عن هذا الموضوع. يمكنك السؤال عن الذكاء أو نظريات التعلم";
+        }
+        
+        // النطق بالصوت
+        function speakWithResponsiveVoice(text) {
+            responsiveVoice.speak(text, "Arabic Female", {
+                rate: 0.9,
+                onend: () => resetState()
+            });
+        }
+        
+        // إضافة رسالة
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const messageClass = type === 'user' ? 'user-message' : 
+                              type === 'error' ? 'error-message' : 'assistant-message';
+            
+            messageDiv.innerHTML = `<div class="${messageClass}">${text}</div>`;
+            conversationEl.appendChild(messageDiv);
+            conversationEl.scrollTop = conversationEl.scrollHeight;
+        }
+        
+        // عرض الأخطاء
+        function showError(message) {
+            statusEl.textContent = message;
+            statusEl.style.color = '#ff4757';
+            setTimeout(() => {
+                statusEl.textContent = "انقر على الزر وقل 'ذكية' ثم اسأل";
+                statusEl.style.color = '#666';
+            }, 3000);
+        }
+        
+        function getErrorMessage(error) {
+            const errors = {
+                'no-speech': 'لم يتم اكتشاف كلام',
+                'audio-capture': 'لا يمكن الوصول للميكروفون',
+                'not-allowed': 'تم رفض الإذن'
+            };
+            return errors[error] || 'حدث خطأ غير متوقع';
+        }
+        
+        // إعادة التعيين
+        function resetState() {
+            isListening = false;
+            waitingForCommand = false;
+            voiceBtn.classList.remove('active');
+            statusEl.textContent = "انقر على الزر وقل 'ذكية' ثم اسأل";
+            if (recognition) recognition.stop();
+        }
+        
+        // بدء الاستماع
+        voiceBtn.addEventListener('click', async () => {
+            try {
+                if (!isListening) {
+                    if (!recognition) {
+                        recognition = initSpeechRecognition();
+                        if (!recognition) return;
+                    }
+                    
+                    await navigator.mediaDevices.getUserMedia({ audio: true });
                     recognition.start();
                 } else {
                     resetState();
                 }
-            };
-            
-            return recognition;
-        }
-        
-        // ===== بدء الاستماع بعد كلمة الإيقاظ =====
-        async function startListening() {
-            try {
-                if (!recognition) {
-                    recognition = initSpeechRecognition();
-                }
-                
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-                recognition.start();
-                
             } catch (error) {
-                console.error('حدث خطأ:', error);
-                showError(error.message);
-                resetState();
+                console.error("خطأ:", error);
+                showError("يجب السماح باستخدام الميكروفون");
             }
-        }
-        
-        // ===== بقية الدوال (كما هي بدون تغيير) =====
-        // ... (ابقى دالتي handleUserCommand, generateResponse, speakWithResponsiveVoice, speakFallback, addMessage, showError, resetState كما هي في الكود السابق) ...
-        
-        // ===== التهيئة الأولية =====
-        window.addEventListener('load', () => {
-            // اخفاء الزر في البداية (سنستخدم كلمة الإيقاظ)
-            voiceBtn.style.display = 'none';
-            
-            // تهيئة كلمة الإيقاظ
-            initWakeWordDetection();
-            responsiveVoice.enableWindowClickHook();
-            
-            // رسالة ترحيبية
-            setTimeout(() => {
-                speakWithResponsiveVoice("مرحباً، أنا ذكية. قل اسمي لبدء المحادثة");
-            }, 1000);
         });
+        
+        // التهيئة الأولية
+        responsiveVoice.enableWindowClickHook();
     </script>
 </body>
 </html>
