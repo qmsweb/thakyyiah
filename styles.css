@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+
+body {
+    font-family: 'Tajawal', Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 500px;
+    padding: 25px;
+    text-align: center;
+}
+
+h1 {
+    color: #6c63ff;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.subtitle {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.voice-btn {
+    background: #6c63ff;
+    border: none;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 20px auto;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.voice-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(108, 99, 255, 0.3);
+}
+
+.voice-btn.active {
+    background: #ff4757;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+#status {
+    color: #666;
+    margin: 15px 0;
+    min-height: 20px;
+    font-size: 14px;
+}
+
+.conversation {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    min-height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 20px;
+    text-align: right;
+}
+
+.message {
+    margin-bottom: 10px;
+}
+
+.user-message {
+    color: #333;
+    background: #e3f2fd;
+    padding: 8px 12px;
+    border-radius: 18px;
+    display: inline-block;
+    max-width: 80%;
+    text-align: right;
+    margin-left: auto;
+}
+
+.assistant-message {
+    color: white;
+    background: #6c63ff;
+    padding: 8px 12px;
+    border-radius: 18px;
+    display: inline-block;
+    max-width: 80%;
+    text-align: right;
+    margin-left: auto;
+}
+
+.error-message {
+    color: white;
+    background: #ff4757;
+    padding: 8px 12px;
+    border-radius: 18px;
+    display: inline-block;
+    max-width: 80%;
+    text-align: right;
+    margin-left: auto;
+}
+
+.mic-icon {
+    width: 30px;
+    height: 30px;
+}
+
+/* تحسينات للجوال */
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+    
+    .conversation {
+        max-height: 250px;
+    }
+}
