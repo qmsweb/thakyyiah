@@ -1,13 +1,13 @@
-// ===== العناصر الرئيسية =====
+// العناصر الرئيسية
 const voiceBtn = document.getElementById('voiceBtn');
 const statusEl = document.getElementById('status');
 const conversationEl = document.getElementById('conversation');
 
-// ===== حالة التطبيق =====
+// حالة التطبيق
 let isListening = false;
 let recognition;
 
-// ===== قاعدة المعرفة المحسنة =====
+// قاعدة المعرفة
 const knowledgeBase = {
     "الذكاء": "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية. أهم نظريات الذكاء هي نظرية جاردنر للذكاءات المتعددة ونظرية سبيرمان للعامل العام.",
     "نظرية جاردنر": "نظرية الذكاءات المتعددة تقسم الذكاء إلى 8 أنواع: لغوي، منطقي-رياضي، مكاني، جسدي-حركي، موسيقي، بين شخصي، داخل شخصي، وطبيعي. طورها هوارد جاردنر عام 1983.",
@@ -18,7 +18,7 @@ const knowledgeBase = {
     "تحفيز الطلاب": "لتحفيز الطلاب: استخدم التعزيز الإيجابي، حدد أهدافًا واضحة، اجعل التعلم ممتعًا، واربط الدروس بحياتهم اليومية."
 };
 
-// ===== تهيئة التعرف الصوتي =====
+// تهيئة التعرف الصوتي
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
@@ -30,7 +30,6 @@ function initSpeechRecognition() {
     recognition.lang = 'ar-SA';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-    recognition.continuous = false; // التوقف بعد نهاية الكلام
     
     recognition.onstart = () => {
         isListening = true;
@@ -56,31 +55,45 @@ function initSpeechRecognition() {
     return recognition;
 }
 
-// ===== معالجة الأخطاء =====
-function getErrorMessage(error) {
-    const errors = {
-        'no-speech': 'لم يتم اكتشاف كلام',
-        'audio-capture': 'لا يمكن الوصول للميكروفون',
-        'not-allowed': 'تم رفض الإذن',
-        'language-not-supported': 'اللغة غير مدعومة'
-    };
-    return errors[error] || 'حدث خطأ غير متوقع';
+// التعرف على النطق
+function speak(text) {
+    return new Promise((resolve) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            
+            utterance.onend = () => {
+                console.log('انتهى النطق');
+                resolve();
+            };
+            
+            utterance.onerror = (event) => {
+                console.error('حدث خطأ في النطق:', event.error);
+                resolve();
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        } else {
+            console.error('Web Speech API غير مدعوم في هذا المتصفح');
+            resolve();
+        }
+    });
 }
 
-// ===== التعامل مع الأوامر =====
+// معالجة الأوامر
 async function handleUserCommand(command) {
     try {
         addMessage(command, 'user');
         statusEl.textContent = "جاري المعالجة...";
         
-        // تأخير لمحاكاة معالجة البيانات
         await new Promise(resolve => setTimeout(resolve, 800));
         
         const response = generateResponse(command);
         addMessage(response, 'assistant');
         
-        // النطق باستخدام ResponsiveVoice
-        speakWithResponsiveVoice(response);
+        await speak(response);
         
     } catch (error) {
         console.error('حدث خطأ:', error);
@@ -90,11 +103,9 @@ async function handleUserCommand(command) {
     }
 }
 
-// ===== توليد الرد =====
+// توليد الرد
 function generateResponse(command) {
     command = command.toLowerCase();
-    
-    // البحث عن أفضل تطابق
     let bestMatch = null;
     let maxKeywords = 0;
     
@@ -111,51 +122,20 @@ function generateResponse(command) {
     return bestMatch || "أسف، لا أملك معلومات عن هذا الموضوع. يمكنك سؤالي عن: الذكاء، نظريات التعلم، أو الذكاء العاطفي";
 }
 
-// ===== النطق باستخدام ResponsiveVoice =====
-function speakWithResponsiveVoice(text) {
-    try {
-        // إيقاف أي كلام جاري
-        responsiveVoice.cancel();
-        
-        // استخدام الصوت العربي الأنثوي
-        responsiveVoice.speak(text, "Arabic Female", {
-            rate: 0.9,  // سرعة الكلام
-            pitch: 1,   // نبرة الصوت
-            onstart: () => console.log('بدأ النطق'),
-            onend: () => console.log('انتهى النطق')
-        });
-    } catch (error) {
-        console.error('خطأ في ResponsiveVoice:', error);
-        // الرجوع إلى Web Speech API إذا فشل ResponsiveVoice
-        speakFallback(text);
-    }
-}
-
-// ===== دالة احتياطية للنطق =====
-function speakFallback(text) {
-    return new Promise((resolve) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ar-SA';
-        utterance.onend = resolve;
-        window.speechSynthesis.speak(utterance);
-    });
-}
-
-// ===== إضافة رسالة للدردشة =====
+// إضافة رسالة للدردشة
 function addMessage(text, type) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
     
-    let messageClass = 'assistant-message';
-    if (type === 'user') messageClass = 'user-message';
-    if (type === 'error') messageClass = 'error-message';
+    const messageClass = type === 'user' ? 'user-message' : 
+                       type === 'error' ? 'error-message' : 'assistant-message';
     
     messageDiv.innerHTML = `<div class="${messageClass}">${text}</div>`;
     conversationEl.appendChild(messageDiv);
     conversationEl.scrollTop = conversationEl.scrollHeight;
 }
 
-// ===== عرض الخطأ =====
+// عرض الخطأ
 function showError(message) {
     statusEl.textContent = message;
     statusEl.style.color = '#ff4757';
@@ -165,7 +145,7 @@ function showError(message) {
     }, 3000);
 }
 
-// ===== إعادة تعيين الحالة =====
+// إعادة تعيين الحالة
 function resetState() {
     isListening = false;
     voiceBtn.classList.remove('active');
@@ -175,21 +155,28 @@ function resetState() {
     }
 }
 
-// ===== حدث الضغط على الزر =====
+// رسالة الخطأ
+function getErrorMessage(error) {
+    const errors = {
+        'no-speech': 'لم يتم اكتشاف كلام',
+        'audio-capture': 'لا يمكن الوصول للميكروفون',
+        'not-allowed': 'تم رفض الإذن',
+        'language-not-supported': 'اللغة غير مدعومة'
+    };
+    return errors[error] || 'حدث خطأ غير متوقع';
+}
+
+// حدث الضغط على الزر
 voiceBtn.addEventListener('click', async () => {
     try {
         if (!isListening) {
-            // بدء الاستماع
             if (!recognition) {
                 recognition = initSpeechRecognition();
             }
             
-            // طلب إذن الميكروفون
             await navigator.mediaDevices.getUserMedia({ audio: true });
-            
             recognition.start();
         } else {
-            // إيقاف الاستماع
             resetState();
         }
     } catch (error) {
@@ -199,15 +186,12 @@ voiceBtn.addEventListener('click', async () => {
     }
 });
 
-// ===== التهيئة الأولية =====
+// التهيئة الأولية
 window.addEventListener('load', () => {
-    // رسالة ترحيبية صوتية (تتطلب تفاعل المستخدم أولاً)
+    // رسالة ترحيبية عند أول نقرة
     voiceBtn.addEventListener('click', () => {
         if (!isListening) {
-            speakWithResponsiveVoice("مرحباً، أنا ذكية. اضغط على الزر الأحمر وابدأ بالتحدث معي");
+            speak("مرحباً، أنا ذكية. اضغط على الزر الأحمر وابدأ بالتحدث معي");
         }
     }, { once: true });
-    
-    // تفعيل ResponsiveVoice (مطلوب تفعيل بواسطة حدث مستخدم)
-    responsiveVoice.enableWindowClickHook();
 });
