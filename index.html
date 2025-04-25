@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ذكية - المساعد الصوتي</title>
-    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
         
@@ -113,6 +112,12 @@
             display: inline-block;
             max-width: 80%;
         }
+        
+        .wake-word-hint {
+            font-size: 14px;
+            color: #6c63ff;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -126,11 +131,12 @@
             </svg>
         </button>
         
-        <p id="status">انقر على الزر وقل "ذكية" ثم اسأل سؤالك</p>
+        <p id="status">انقر على الزر وابدأ بالتحدث</p>
+        <p class="wake-word-hint">قل "ذكية" متبوعة بسؤالك مباشرة</p>
         
         <div class="conversation" id="conversation">
             <div class="message">
-                <div class="assistant-message">مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. انقر على الزر وقل "ذكية" ثم اسألني</div>
+                <div class="assistant-message">مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. انقر على الزر وقل "ذكية" ثم اسألني سؤالك</div>
             </div>
         </div>
     </div>
@@ -144,7 +150,6 @@
         // الحالات
         let isListening = false;
         let recognition;
-        let waitingForCommand = false;
         
         // قاعدة المعرفة
         const knowledgeBase = {
@@ -165,6 +170,7 @@
             recognizer.lang = 'ar-SA';
             recognizer.interimResults = false;
             recognizer.maxAlternatives = 1;
+            recognizer.continuous = false;
             
             recognizer.onstart = () => {
                 isListening = true;
@@ -184,7 +190,9 @@
             };
             
             recognizer.onend = () => {
-                if (isListening) recognizer.start();
+                if (isListening) {
+                    setTimeout(() => recognizer.start(), 500);
+                }
             };
             
             return recognizer;
@@ -192,21 +200,23 @@
         
         // معالجة الأوامر الصوتية
         function processVoiceCommand(transcript) {
-            if (!waitingForCommand) {
-                if (transcript.includes("ذكية")) {
-                    waitingForCommand = true;
-                    addMessage("نعم تفضل بسؤالك", "assistant");
-                    speakWithResponsiveVoice("نعم تفضل بسؤالك");
-                }
-                return;
-            }
-            
-            waitingForCommand = false;
             addMessage(transcript, "user");
             
-            const response = findBestResponse(transcript);
-            addMessage(response, "assistant");
-            speakWithResponsiveVoice(response);
+            // التحقق من وجود كلمة "ذكية"
+            if (transcript.includes("ذكية")) {
+                const question = transcript.replace("ذكية", "").trim();
+                if (question) {
+                    const response = findBestResponse(question);
+                    addMessage(response, "assistant");
+                    speak(response);
+                } else {
+                    addMessage("نعم، تفضل بسؤالك", "assistant");
+                    speak("نعم، تفضل بسؤالك");
+                }
+            } else {
+                addMessage("من فضلك قل 'ذكية' متبوعة بسؤالك", "assistant");
+                speak("من فضلك قل 'ذكية' متبوعة بسؤالك");
+            }
         }
         
         // البحث عن أفضل رد
@@ -217,15 +227,32 @@
                     return response;
                 }
             }
-            return "عذراً، لا أملك معلومات عن هذا الموضوع. يمكنك السؤال عن الذكاء أو نظريات التعلم";
+            return "عذراً، لا أملك معلومات عن هذا الموضوع. يمكنك السؤال عن: الذكاء، نظرية جاردنر، أو الذكاء العاطفي";
         }
         
         // النطق بالصوت
-        function speakWithResponsiveVoice(text) {
-            responsiveVoice.speak(text, "Arabic Female", {
-                rate: 0.9,
-                onend: () => resetState()
-            });
+        function speak(text) {
+            if (!window.speechSynthesis) {
+                console.warn("Text-to-speech غير مدعوم");
+                return;
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            utterance.rate = 0.9;
+            
+            // اختيار صوت عربي إن وجد
+            const voices = window.speechSynthesis.getVoices();
+            const arabicVoice = voices.find(voice => voice.lang.includes('ar'));
+            if (arabicVoice) {
+                utterance.voice = arabicVoice;
+            }
+            
+            utterance.onend = () => {
+                resetState();
+            };
+            
+            window.speechSynthesis.speak(utterance);
         }
         
         // إضافة رسالة
@@ -246,7 +273,7 @@
             statusEl.textContent = message;
             statusEl.style.color = '#ff4757';
             setTimeout(() => {
-                statusEl.textContent = "انقر على الزر وقل 'ذكية' ثم اسأل";
+                statusEl.textContent = "انقر على الزر وابدأ بالتحدث";
                 statusEl.style.color = '#666';
             }, 3000);
         }
@@ -263,10 +290,8 @@
         // إعادة التعيين
         function resetState() {
             isListening = false;
-            waitingForCommand = false;
             voiceBtn.classList.remove('active');
-            statusEl.textContent = "انقر على الزر وقل 'ذكية' ثم اسأل";
-            if (recognition) recognition.stop();
+            statusEl.textContent = "انقر على الزر وابدأ بالتحدث";
         }
         
         // بدء الاستماع
@@ -282,6 +307,7 @@
                     recognition.start();
                 } else {
                     resetState();
+                    recognition.stop();
                 }
             } catch (error) {
                 console.error("خطأ:", error);
@@ -290,7 +316,14 @@
         });
         
         // التهيئة الأولية
-        responsiveVoice.enableWindowClickHook();
+        window.addEventListener('load', () => {
+            // تحميل الأصوات المتاحة
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    console.log("الأصوات المتاحة:", window.speechSynthesis.getVoices());
+                };
+            }
+        });
     </script>
 </body>
 </html>
