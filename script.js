@@ -25,6 +25,17 @@ class VoiceAssistant {
         this.recognition = null;
         this.initSpeechRecognition();
         this.initElements();
+        this.waitForResponsiveVoice();
+    }
+
+    waitForResponsiveVoice() {
+        // انتظار حتى يتم تحميل ResponsiveVoice
+        if (typeof responsiveVoice === 'undefined') {
+            setTimeout(() => this.waitForResponsiveVoice(), 100);
+            return;
+        }
+        
+        // بعد تحميل ResponsiveVoice، ابدأ المساعد
         this.initResponsiveVoice();
         this.addWelcomeMessage();
     }
@@ -38,14 +49,9 @@ class VoiceAssistant {
     }
 
     initResponsiveVoice() {
-        // تأكد من تحميل ResponsiveVoice
-        if (typeof responsiveVoice === 'undefined') {
-            console.error('ResponsiveVoice not loaded');
-            return;
+        if (typeof responsiveVoice !== 'undefined') {
+            responsiveVoice.init();
         }
-
-        // تهيئة ResponsiveVoice
-        responsiveVoice.init();
     }
 
     initSpeechRecognition() {
@@ -74,15 +80,17 @@ class VoiceAssistant {
         const messageElement = this.addMessage(welcomeMessage, 'assistant', true);
         
         new TypeWriter(welcomeMessage, messageElement, () => {
-            // نطق رسالة الترحيب بعد اكتمال الكتابة
-            this.speakResponse(welcomeMessage);
+            if (typeof responsiveVoice !== 'undefined') {
+                this.speakResponse(welcomeMessage);
+            }
         });
     }
 
     toggleListening() {
         if (!this.isListening && !this.isSpeaking) {
-            // إيقاف أي نطق جارٍ
-            responsiveVoice.cancel();
+            if (typeof responsiveVoice !== 'undefined') {
+                responsiveVoice.cancel();
+            }
             
             this.recognition?.start();
             this.isListening = true;
@@ -107,7 +115,9 @@ class VoiceAssistant {
         const messageElement = this.addMessage(response, 'assistant', true);
         
         new TypeWriter(response, messageElement, () => {
-            this.speakResponse(response);
+            if (typeof responsiveVoice !== 'undefined') {
+                this.speakResponse(response);
+            }
         });
     }
 
@@ -190,10 +200,14 @@ class VoiceAssistant {
     }
 
     speakResponse(text) {
+        if (typeof responsiveVoice === 'undefined') {
+            console.error('ResponsiveVoice not loaded');
+            return;
+        }
+
         this.isSpeaking = true;
         this.updateMicButtonState();
 
-        // استخدام ResponsiveVoice للنطق
         responsiveVoice.speak(text, "Arabic Female", {
             pitch: 1,
             rate: 0.9,
