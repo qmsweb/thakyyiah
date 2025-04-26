@@ -1,224 +1,213 @@
-// العناصر الرئيسية
-const voiceBtn = document.getElementById('voiceBtn');
-const statusEl = document.getElementById('status');
-const conversationEl = document.getElementById('conversation');
+class TypeWriter {
+    constructor(text, element, onComplete) {
+        this.text = text;
+        this.element = element;
+        this.onComplete = onComplete;
+        this.currentIndex = 0;
+        this.write();
+    }
 
-// حالة التطبيق
-let isListening = false;
-let recognition;
-let arabicVoice;
-
-// قاعدة المعرفة
-const knowledgeBase = {
-    "الذكاء": "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية. أهم نظريات الذكاء هي نظرية جاردنر للذكاءات المتعددة ونظرية سبيرمان للعامل العام.",
-    "نظرية جاردنر": "نظرية الذكاءات المتعددة تقسم الذكاء إلى 8 أنواع: لغوي، منطقي-رياضي، مكاني، جسدي-حركي، موسيقي، بين شخصي، داخل شخصي، وطبيعي. طورها هوارد جاردنر عام 1983.",
-    "الذكاء العاطفي": "هو القدرة على فهم وإدارة العواطف. يتكون من 5 عناصر: الوعي الذاتي، التنظيم الذاتي، التحفيز، التعاطف، والمهارات الاجتماعية.",
-    "التعلم": "أفضل طرق التعلم تشمل: التكرار المتباعد، الممارسة المتغيرة، والاختبار الذاتي. حسب الأبحاث، هذه الطرق تحسن الاحتفاظ بالمعلومات بنسبة 50-70%.",
-    "نظريات التعلم": "أهم نظريات التعلم هي: النظرية السلوكية (سكنر، بافلوف)، النظرية المعرفية (بياجيه)، والنظرية البنائية الاجتماعية (فيجوتسكي).",
-    "اضطرابات التعلم": "هي صعوبات في اكتساب المهارات الأكاديمية مثل القراءة (عسر القراءة) أو الكتابة (عسر الكتابة) أو الحساب (عسر الحساب). تتطلب تدخلات تعليمية متخصصة.",
-    "تحفيز الطلاب": "لتحفيز الطلاب: استخدم التعزيز الإيجابي، حدد أهدافًا واضحة، اجعل التعلم ممتعًا، واربط الدروس بحياتهم اليومية."
-};
-
-// تهيئة الأصوات
-function initVoices() {
-    return new Promise((resolve) => {
-        const voices = window.speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            arabicVoice = voices.find(v => v.lang.includes('ar-SA') || 
-                          voices.find(v => v.lang.includes('ar-EG')) ||
-                          voices.find(v => v.name.includes('Arabic'));
-            resolve();
-        } else {
-            window.speechSynthesis.onvoiceschanged = () => {
-                arabicVoice = window.speechSynthesis.getVoices()
-                    .find(v => v.lang.includes('ar-SA') || 
-                    v.lang.includes('ar-EG') || 
-                    v.name.includes('Arabic'));
-                resolve();
-            };
+    write() {
+        if (this.currentIndex < this.text.length) {
+            this.element.textContent += this.text[this.currentIndex];
+            this.currentIndex++;
+            setTimeout(() => this.write(), 50);
+        } else if (this.onComplete) {
+            this.onComplete();
         }
-    });
+    }
 }
 
-// دالة النطق
-function speak(text) {
-    return new Promise((resolve) => {
-        if (!('speechSynthesis' in window)) {
-            console.error('Web Speech API غير مدعوم');
-            resolve();
-            return;
+class VoiceAssistant {
+    constructor() {
+        this.isListening = false;
+        this.isSpeaking = false;
+        this.recognition = null;
+        this.initSpeechRecognition();
+        this.initElements();
+        this.addWelcomeMessage();
+    }
+
+    initElements() {
+        this.micButton = document.getElementById('micButton');
+        this.statusText = document.getElementById('status');
+        this.chatMessages = document.getElementById('chatMessages');
+
+        this.micButton.addEventListener('click', () => this.toggleListening());
+    }
+
+    initSpeechRecognition() {
+        if ('webkitSpeechRecognition' in window) {
+            this.recognition = new webkitSpeechRecognition();
+            this.recognition.continuous = false;
+            this.recognition.lang = 'ar-SA';
+            this.recognition.interimResults = false;
+
+            this.recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                this.handleUserInput(text);
+            };
+
+            this.recognition.onend = () => {
+                this.isListening = false;
+                this.updateMicButtonState();
+            };
+        } else {
+            console.error('Speech recognition not supported');
         }
+    }
 
-        window.speechSynthesis.cancel();
+    addWelcomeMessage() {
+        this.addMessage(
+            'مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. اسألني عن الذكاء، نظريات التعلم، التحفيز، أو صعوبات التعلم',
+            'assistant'
+        );
+    }
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ar-SA';
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-
-        if (arabicVoice) {
-            utterance.voice = arabicVoice;
+    toggleListening() {
+        if (!this.isListening && !this.isSpeaking) {
+            if (window.responsiveVoice) {
+                window.responsiveVoice.cancel();
+            }
+            this.recognition?.start();
+            this.isListening = true;
+        } else {
+            this.recognition?.stop();
+            this.isListening = false;
         }
+        this.updateMicButtonState();
+    }
 
-        utterance.onend = resolve;
-        utterance.onerror = (e) => {
-            console.error('خطأ في النطق:', e);
-            resolve();
+    updateMicButtonState() {
+        this.micButton.className = 'mic-button' + 
+            (this.isListening ? ' listening' : '') +
+            (this.isSpeaking ? ' speaking' : '');
+        this.statusText.textContent = this.isListening ? 
+            'جاري الاستماع...' : 'انقر على الزر للتحدث';
+    }
+
+    handleUserInput(text) {
+        this.addMessage(text, 'user');
+        const response = this.generateResponse(text);
+        const messageElement = this.addMessage(response, 'assistant', true);
+        
+        new TypeWriter(response, messageElement, () => {
+            this.speakResponse(response);
+        });
+    }
+
+    // حساب نسبة التشابه بين نصين
+    calculateSimilarity(str1, str2) {
+        const words1 = str1.toLowerCase().split(' ');
+        const words2 = str2.toLowerCase().split(' ');
+        
+        let matches = 0;
+        for (const word1 of words1) {
+            for (const word2 of words2) {
+                if (word2.includes(word1) || word1.includes(word2)) {
+                    matches++;
+                }
+            }
+        }
+        
+        return matches / Math.max(words1.length, words2.length);
+    }
+
+    generateResponse(input) {
+        const knowledgeBase = {
+            "الذكاء": {
+                keywords: ["ذكاء", "ذكي", "قدرات", "معرفي", "عقلي"],
+                response: "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية. يتضمن القدرة على التفكير المنطقي وحل المشكلات والتكيف مع المواقف الجديدة."
+            },
+            "نظريات التعلم": {
+                keywords: ["نظرية", "نظريات", "تعلم", "سلوكية", "معرفية", "بنائية"],
+                response: "أهم نظريات التعلم هي السلوكية (بافلوف وسكنر) والمعرفية (بياجيه) والبنائية (فيجوتسكي). كل نظرية تقدم فهماً مختلفاً لكيفية اكتساب المعرفة والمهارات."
+            },
+            "الذكاء العاطفي": {
+                keywords: ["عاطفي", "عواطف", "مشاعر", "انفعالات", "تعاطف"],
+                response: "الذكاء العاطفي هو القدرة على فهم وإدارة العواطف. يشمل خمسة أبعاد: الوعي الذاتي، التنظيم الذاتي، التحفيز، التعاطف، والمهارات الاجتماعية."
+            },
+            "صعوبات التعلم": {
+                keywords: ["صعوبة", "صعوبات", "عسر", "قراءة", "كتابة", "حساب"],
+                response: "صعوبات التعلم هي اضطرابات تؤثر على القدرة على التعلم، مثل عسر القراءة (الديسلكسيا) وعسر الكتابة (الديسغرافيا) وعسر الحساب (الديسكالكوليا). تتطلب تدخلاً تربوياً متخصصاً."
+            },
+            "التحفيز": {
+                keywords: ["تحفيز", "دافعية", "حافز", "تشجيع", "دوافع"],
+                response: "التحفيز هو عملية إثارة وتوجيه السلوك نحو هدف معين. يمكن تحفيز الطلاب من خلال: تحديد أهداف واضحة، التعزيز الإيجابي، ربط التعلم بالحياة الواقعية، وخلق بيئة تعليمية داعمة."
+            }
         };
 
-        window.speechSynthesis.speak(utterance);
-    });
-}
+        let bestMatch = null;
+        let highestSimilarity = 0;
 
-// تهيئة التعرف الصوتي
-function initSpeechRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-        throw new Error('المتصفح لا يدعم التعرف على الصوت');
-    }
-    
-    recognition = new SpeechRecognition();
-    recognition.lang = 'ar-SA';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    
-    recognition.onstart = () => {
-        isListening = true;
-        voiceBtn.classList.add('active');
-        statusEl.textContent = "جاري الاستماع...";
-    };
-    
-    recognition.onresult = async (event) => {
-        const transcript = event.results[0][0].transcript.trim();
-        await handleUserCommand(transcript);
-    };
-    
-    recognition.onerror = (event) => {
-        console.error('حدث خطأ:', event.error);
-        showError(getErrorMessage(event.error));
-        resetState();
-    };
-    
-    recognition.onend = () => {
-        resetState();
-    };
-    
-    return recognition;
-}
-
-// معالجة الأوامر
-async function handleUserCommand(command) {
-    try {
-        addMessage(command, 'user');
-        statusEl.textContent = "جاري المعالجة...";
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const response = generateResponse(command);
-        addMessage(response, 'assistant');
-        
-        await speak(response);
-        
-    } catch (error) {
-        console.error('حدث خطأ:', error);
-        addMessage("حدث خطأ أثناء المعالجة", 'error');
-    } finally {
-        statusEl.textContent = "اضغط على الزر الأحمر للتحدث";
-    }
-}
-
-// توليد الرد
-function generateResponse(command) {
-    command = command.toLowerCase();
-    let bestMatch = null;
-    let maxKeywords = 0;
-    
-    for (const [keyword, response] of Object.entries(knowledgeBase)) {
-        const keywords = keyword.split(' ');
-        const matchCount = keywords.filter(kw => command.includes(kw.toLowerCase())).length;
-        
-        if (matchCount > maxKeywords) {
-            maxKeywords = matchCount;
-            bestMatch = response;
-        }
-    }
-    
-    return bestMatch || "أسف، لا أملك معلومات عن هذا الموضوع. يمكنك سؤالي عن: الذكاء، نظريات التعلم، أو الذكاء العاطفي";
-}
-
-// إضافة رسالة للدردشة
-function addMessage(text, type) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message';
-    
-    const messageClass = type === 'user' ? 'user-message' : 
-                       type === 'error' ? 'error-message' : 'assistant-message';
-    
-    messageDiv.innerHTML = `<div class="${messageClass}">${text}</div>`;
-    conversationEl.appendChild(messageDiv);
-    conversationEl.scrollTop = conversationEl.scrollHeight;
-}
-
-// عرض الخطأ
-function showError(message) {
-    statusEl.textContent = message;
-    statusEl.style.color = '#ff4757';
-    setTimeout(() => {
-        statusEl.textContent = "اضغط على الزر الأحمر للتحدث";
-        statusEl.style.color = '#666';
-    }, 3000);
-}
-
-// رسالة الخطأ
-function getErrorMessage(error) {
-    const errors = {
-        'no-speech': 'لم يتم اكتشاف كلام',
-        'audio-capture': 'لا يمكن الوصول للميكروفون',
-        'not-allowed': 'تم رفض الإذن',
-        'language-not-supported': 'اللغة غير مدعومة'
-    };
-    return errors[error] || 'حدث خطأ غير متوقع';
-}
-
-// إعادة تعيين الحالة
-function resetState() {
-    isListening = false;
-    voiceBtn.classList.remove('active');
-    statusEl.textContent = "اضغط على الزر الأحمر للتحدث";
-    if (recognition) {
-        recognition.stop();
-    }
-}
-
-// حدث الضغط على الزر
-voiceBtn.addEventListener('click', async () => {
-    try {
-        if (!isListening) {
-            if (!recognition) {
-                recognition = initSpeechRecognition();
-            }
+        // البحث عن أفضل تطابق
+        for (const [topic, data] of Object.entries(knowledgeBase)) {
+            // حساب التشابه مع العنوان
+            let titleSimilarity = this.calculateSimilarity(input, topic);
             
-            await navigator.mediaDevices.getUserMedia({ audio: true });
-            recognition.start();
-        } else {
-            resetState();
-        }
-    } catch (error) {
-        console.error('حدث خطأ:', error);
-        showError(error.message);
-        resetState();
-    }
-});
+            // حساب التشابه مع الكلمات المفتاحية
+            let keywordSimilarity = data.keywords.reduce((max, keyword) => {
+                const similarity = this.calculateSimilarity(input, keyword);
+                return Math.max(max, similarity);
+            }, 0);
 
-// التهيئة الأولية
-window.addEventListener('load', async () => {
-    await initVoices();
-    
-    // رسالة ترحيبية عند أول نقرة
-    voiceBtn.addEventListener('click', () => {
-        if (!isListening) {
-            speak("مرحباً، أنا ذكية. اضغط على الزر الأحمر وابدأ بالتحدث معي");
+            // اختيار أعلى تشابه
+            const totalSimilarity = Math.max(titleSimilarity, keywordSimilarity);
+
+            if (totalSimilarity > highestSimilarity) {
+                highestSimilarity = totalSimilarity;
+                bestMatch = data.response;
+            }
         }
-    }, { once: true });
+
+        // إذا كان التشابه منخفضاً جداً، نعتبر أنه لم يتم العثور على تطابق
+        return highestSimilarity > 0.2 ? bestMatch : 
+            "عذراً، لم أفهم سؤالك بشكل جيد. يمكنك السؤال عن: الذكاء، نظريات التعلم، الذكاء العاطفي، صعوبات التعلم، أو التحفيز";
+    }
+
+    addMessage(text, type, empty = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.textContent = empty ? '' : text;
+        
+        messageDiv.appendChild(contentDiv);
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        
+        return contentDiv;
+    }
+
+    speakResponse(text) {
+        this.isSpeaking = true;
+        this.updateMicButtonState();
+
+        if (window.responsiveVoice) {
+            window.responsiveVoice.speak(text, "Arabic Female", {
+                pitch: 1,
+                rate: 0.9,
+                onend: () => {
+                    this.isSpeaking = false;
+                    this.updateMicButtonState();
+                }
+            });
+        } else {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar';
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            utterance.onend = () => {
+                this.isSpeaking = false;
+                this.updateMicButtonState();
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+}
+
+// Initialize the voice assistant when the page loads
+window.addEventListener('load', () => {
+    const assistant = new VoiceAssistant();
 });
