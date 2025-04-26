@@ -25,6 +25,7 @@ class VoiceAssistant {
         this.recognition = null;
         this.initSpeechRecognition();
         this.initElements();
+        this.initResponsiveVoice();
         this.addWelcomeMessage();
     }
 
@@ -34,6 +35,17 @@ class VoiceAssistant {
         this.chatMessages = document.getElementById('chatMessages');
 
         this.micButton.addEventListener('click', () => this.toggleListening());
+    }
+
+    initResponsiveVoice() {
+        // تأكد من تحميل ResponsiveVoice
+        if (typeof responsiveVoice === 'undefined') {
+            console.error('ResponsiveVoice not loaded');
+            return;
+        }
+
+        // تهيئة ResponsiveVoice
+        responsiveVoice.init();
     }
 
     initSpeechRecognition() {
@@ -58,17 +70,20 @@ class VoiceAssistant {
     }
 
     addWelcomeMessage() {
-        this.addMessage(
-            'مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. اسألني عن الذكاء، نظريات التعلم، التحفيز، أو صعوبات التعلم',
-            'assistant'
-        );
+        const welcomeMessage = 'مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. اسألني عن الذكاء، نظريات التعلم، التحفيز، أو صعوبات التعلم';
+        const messageElement = this.addMessage(welcomeMessage, 'assistant', true);
+        
+        new TypeWriter(welcomeMessage, messageElement, () => {
+            // نطق رسالة الترحيب بعد اكتمال الكتابة
+            this.speakResponse(welcomeMessage);
+        });
     }
 
     toggleListening() {
         if (!this.isListening && !this.isSpeaking) {
-            if (window.responsiveVoice) {
-                window.responsiveVoice.cancel();
-            }
+            // إيقاف أي نطق جارٍ
+            responsiveVoice.cancel();
+            
             this.recognition?.start();
             this.isListening = true;
         } else {
@@ -96,7 +111,6 @@ class VoiceAssistant {
         });
     }
 
-    // حساب نسبة التشابه بين نصين
     calculateSimilarity(str1, str2) {
         const words1 = str1.toLowerCase().split(' ');
         const words2 = str2.toLowerCase().split(' ');
@@ -140,18 +154,14 @@ class VoiceAssistant {
         let bestMatch = null;
         let highestSimilarity = 0;
 
-        // البحث عن أفضل تطابق
         for (const [topic, data] of Object.entries(knowledgeBase)) {
-            // حساب التشابه مع العنوان
             let titleSimilarity = this.calculateSimilarity(input, topic);
             
-            // حساب التشابه مع الكلمات المفتاحية
             let keywordSimilarity = data.keywords.reduce((max, keyword) => {
                 const similarity = this.calculateSimilarity(input, keyword);
                 return Math.max(max, similarity);
             }, 0);
 
-            // اختيار أعلى تشابه
             const totalSimilarity = Math.max(titleSimilarity, keywordSimilarity);
 
             if (totalSimilarity > highestSimilarity) {
@@ -160,7 +170,6 @@ class VoiceAssistant {
             }
         }
 
-        // إذا كان التشابه منخفضاً جداً، نعتبر أنه لم يتم العثور على تطابق
         return highestSimilarity > 0.2 ? bestMatch : 
             "عذراً، لم أفهم سؤالك بشكل جيد. يمكنك السؤال عن: الذكاء، نظريات التعلم، الذكاء العاطفي، صعوبات التعلم، أو التحفيز";
     }
@@ -184,30 +193,19 @@ class VoiceAssistant {
         this.isSpeaking = true;
         this.updateMicButtonState();
 
-        if (window.responsiveVoice) {
-            window.responsiveVoice.speak(text, "Arabic Female", {
-                pitch: 1,
-                rate: 0.9,
-                onend: () => {
-                    this.isSpeaking = false;
-                    this.updateMicButtonState();
-                }
-            });
-        } else {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'ar';
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-            utterance.onend = () => {
+        // استخدام ResponsiveVoice للنطق
+        responsiveVoice.speak(text, "Arabic Female", {
+            pitch: 1,
+            rate: 0.9,
+            onend: () => {
                 this.isSpeaking = false;
                 this.updateMicButtonState();
-            };
-            window.speechSynthesis.speak(utterance);
-        }
+            }
+        });
     }
 }
 
-// Initialize the voice assistant when the page loads
+// تهيئة المساعد عند تحميل الصفحة
 window.addEventListener('load', () => {
     const assistant = new VoiceAssistant();
 });
