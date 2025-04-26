@@ -4,29 +4,347 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ذكية - المساعد الصوتي لعلم النفس التربوي</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+    <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #f3f4f6, #e5e7eb);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2rem;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .chat-header h2 {
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .chat-header p {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .mic-button {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+        }
+
+        .mic-button.listening {
+            background: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+
+        .mic-button.speaking {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .chat-messages {
+            background: #f9fafb;
+            border-radius: 10px;
+            padding: 1rem;
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-start;
+        }
+
+        .message.assistant {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+        }
+
+        .message.user .message-content {
+            background: white;
+            color: #1f2937;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .message.assistant .message-content {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+        }
+
+        .message.error .message-content {
+            background: #ef4444;
+            color: white;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 10px;
+            }
+
+            .chat-container {
+                padding: 1rem;
+            }
+
+            .chat-messages {
+                height: 300px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>ذكية</h1>
-        <p class="subtitle">المساعد الصوتي لعلم النفس التربوي</p>
-        
-        <button id="voiceBtn" class="voice-btn" aria-label="زر التحدث">
-            <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V20c0 .55.45 1 1 1s1-.45 1-1v-2.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/>
-            </svg>
-        </button>
-        
-        <p id="status">اضغط على الزر وابدأ بالتحدث</p>
-        
-        <div class="conversation" id="conversation">
-            <div class="message">
-                <div class="assistant-message">مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. اسألني عن الذكاء أو نظريات التعلم</div>
+        <header>
+            <h1>ذكية</h1>
+        </header>
+
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>المساعد الصوتي لعلم النفس التربوي</h2>
+                <p id="status">انقر على الزر للتحدث</p>
+            </div>
+
+            <button id="micButton" class="mic-button" aria-label="زر التحدث">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+            </button>
+
+            <div id="chatMessages" class="chat-messages">
+                <!-- Messages will be added here -->
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        class TypeWriter {
+            constructor(text, element, onComplete) {
+                this.text = text;
+                this.element = element;
+                this.onComplete = onComplete;
+                this.currentIndex = 0;
+                this.write();
+            }
+
+            write() {
+                if (this.currentIndex < this.text.length) {
+                    this.element.textContent += this.text[this.currentIndex];
+                    this.currentIndex++;
+                    setTimeout(() => this.write(), 50);
+                } else if (this.onComplete) {
+                    this.onComplete();
+                }
+            }
+        }
+
+        class VoiceAssistant {
+            constructor() {
+                this.isListening = false;
+                this.isSpeaking = false;
+                this.recognition = null;
+                this.initSpeechRecognition();
+                this.initElements();
+                this.addWelcomeMessage();
+            }
+
+            initElements() {
+                this.micButton = document.getElementById('micButton');
+                this.statusText = document.getElementById('status');
+                this.chatMessages = document.getElementById('chatMessages');
+
+                this.micButton.addEventListener('click', () => this.toggleListening());
+            }
+
+            initSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window) {
+                    this.recognition = new webkitSpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.lang = 'ar-SA';
+                    this.recognition.interimResults = false;
+
+                    this.recognition.onresult = (event) => {
+                        const text = event.results[0][0].transcript;
+                        this.handleUserInput(text);
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.updateMicButtonState();
+                    };
+                } else {
+                    console.error('Speech recognition not supported');
+                }
+            }
+
+            addWelcomeMessage() {
+                this.addMessage(
+                    'مرحباً! أنا ذكية، مساعدتك في علم النفس التربوي. اسألني عن الذكاء أو نظريات التعلم',
+                    'assistant'
+                );
+            }
+
+            toggleListening() {
+                if (!this.isListening && !this.isSpeaking) {
+                    if (window.responsiveVoice) {
+                        window.responsiveVoice.cancel();
+                    }
+                    this.recognition?.start();
+                    this.isListening = true;
+                } else {
+                    this.recognition?.stop();
+                    this.isListening = false;
+                }
+                this.updateMicButtonState();
+            }
+
+            updateMicButtonState() {
+                this.micButton.className = 'mic-button' + 
+                    (this.isListening ? ' listening' : '') +
+                    (this.isSpeaking ? ' speaking' : '');
+                this.statusText.textContent = this.isListening ? 
+                    'جاري الاستماع...' : 'انقر على الزر للتحدث';
+            }
+
+            handleUserInput(text) {
+                this.addMessage(text, 'user');
+                const response = this.generateResponse(text);
+                const messageElement = this.addMessage(response, 'assistant', true);
+                
+                // Start typewriter effect
+                new TypeWriter(response, messageElement, () => {
+                    this.speakResponse(response);
+                });
+            }
+
+            generateResponse(input) {
+                const knowledgeBase = {
+                    "الذكاء": "الذكاء مفهوم متعدد الأبعاد يشمل القدرات المعرفية والعاطفية. يتضمن القدرة على التفكير المنطقي وحل المشكلات والتكيف مع المواقف الجديدة.",
+                    "نظريات التعلم": "أهم نظريات التعلم هي السلوكية والمعرفية والبنائية. كل نظرية تقدم فهماً مختلفاً لكيفية اكتساب المعرفة والمهارات.",
+                    "الذكاء العاطفي": "الذكاء العاطفي هو القدرة على فهم وإدارة العواطف. يشمل الوعي الذاتي، التنظيم الذاتي، التحفيز، التعاطف، والمهارات الاجتماعية."
+                };
+
+                const matchingKey = Object.keys(knowledgeBase).find(key => 
+                    input.toLowerCase().includes(key.toLowerCase())
+                );
+
+                return matchingKey ? knowledgeBase[matchingKey] : 
+                    "عذراً، لم أفهم سؤالك. يمكنك السؤال عن الذكاء أو نظريات التعلم أو الذكاء العاطفي";
+            }
+
+            addMessage(text, type, empty = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${type}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = empty ? '' : text;
+                
+                messageDiv.appendChild(contentDiv);
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+                
+                return contentDiv;
+            }
+
+            speakResponse(text) {
+                this.isSpeaking = true;
+                this.updateMicButtonState();
+
+                if (window.responsiveVoice) {
+                    window.responsiveVoice.speak(text, "Arabic Female", {
+                        pitch: 1,
+                        rate: 0.9,
+                        onend: () => {
+                            this.isSpeaking = false;
+                            this.updateMicButtonState();
+                        }
+                    });
+                } else {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ar';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    utterance.onend = () => {
+                        this.isSpeaking = false;
+                        this.updateMicButtonState();
+                    };
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        }
+
+        // Initialize the voice assistant when the page loads
+        window.addEventListener('load', () => {
+            const assistant = new VoiceAssistant();
+        });
+    </script>
 </body>
 </html>
