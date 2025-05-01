@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مساعد تفاعلي صوتي</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+    button { padding: 10px 20px; font-size: 18px; }
+    #output { margin-top: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🧠 مساعد علم النفس التربوي</h1>
+  <button onclick="startListening()">🎤 اضغط للتحدث</button>
+  <div id="output">الرد سيظهر هنا...</div>
+
+  <script>
+    const output = document.getElementById("output");
+
+    const synth = window.speechSynthesis;
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "ar-SA"; // اللغة العربية
+
+    function startListening() {
+      recognition.start();
+      output.textContent = "...يتم الاستماع الآن";
+    }
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      output.textContent = `🗣️ قلت: ${transcript}`;
+      respond(transcript);
+    };
+
+    function respond(text) {
+      let reply = "لم أفهم ما قلت";
+
+      if (text.includes("ما هو الذكاء")) {
+        reply = "الذكاء هو القدرة على الفهم والتحليل وحل المشكلات.";
+      } else if (text.includes("بينيه")) {
+        reply = "بينيه اعتبر أن الذكاء قدرة عقلية قابلة للتطور، وليس شيئًا فطريًا فقط.";
+      } else if (text.includes("شكرا")) {
+        reply = "على الرحب والسعة!";
+      }
+
+      speak(reply);
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "ar-SA";
+      synth.speak(utterance);
+      output.textContent += `\n🤖 المساعد: ${text}`;
+    }
+  </script>
+</body>
+</html>
