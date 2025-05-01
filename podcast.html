@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400..700&family=Readex+Pro:wght@160..700&family=Zain:ital,wght@0,200;0,300;0,400;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         /* Reset وتنسيقات عامة */
         * {
@@ -132,6 +133,34 @@
             font-size: 1.2rem;
         }
 
+        /* زر QR Code */
+        .qr-btn {
+            background-color: #000000; /* أسود */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Readex Pro', sans-serif;
+            margin-right: 10px;
+        }
+
+        .qr-btn:hover {
+            background-color: #333333; /* رمادي داكن */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .qr-btn i {
+            font-size: 1.2rem;
+        }
+
         /* التكيف مع الشاشات الصغيرة */
         @media (min-width: 768px) {
             .podcast-card {
@@ -166,7 +195,7 @@
                 font-size: 1rem;
             }
             
-            .share-btn {
+            .share-btn, .qr-btn {
                 padding: 10px 20px;
                 font-size: 0.9rem;
             }
@@ -187,6 +216,66 @@
 
         .podcast-image:hover {
             transform: scale(1.05);
+        }
+
+        /* QR Code Modal */
+        .qr-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qr-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .qr-close {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        #qrcode {
+            margin: 20px auto;
+        }
+
+        .qr-title {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            color: #000;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .buttons-container {
+                flex-direction: column;
+            }
+            
+            .qr-btn, .share-btn {
+                margin-right: 0;
+                margin-bottom: 10px;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -212,18 +301,36 @@
                     </audio>
                     
                     <div class="share-section">
-                        <button id="share-btn" class="share-btn">
-                            <i class="fas fa-share-alt"></i> مشاركة الحلقة
-                        </button>
+                        <div class="buttons-container">
+                            <button id="qr-btn" class="qr-btn">
+                                <i class="fas fa-qrcode"></i> مشاركة QR
+                            </button>
+                            <button id="share-btn" class="share-btn">
+                                <i class="fas fa-share-alt"></i> مشاركة الحلقة
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- QR Code Modal -->
+    <div id="qr-modal" class="qr-modal">
+        <span class="qr-close">&times;</span>
+        <div class="qr-content">
+            <h3 class="qr-title">مسح رمز QR للمشاركة</h3>
+            <div id="qrcode"></div>
+            <p>قم بمسح الرمز لمشاركة الحلقة مع الأصدقاء</p>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const shareBtn = document.getElementById('share-btn');
+            const qrBtn = document.getElementById('qr-btn');
+            const qrModal = document.getElementById('qr-modal');
+            const qrClose = document.querySelector('.qr-close');
             
             // دالة المشاركة
             shareBtn.addEventListener('click', function() {
@@ -244,6 +351,36 @@
                     )}&url=${encodeURIComponent(window.location.href)}`;
                     
                     window.open(shareUrl, '_blank');
+                }
+            });
+            
+            // دالة عرض QR Code
+            qrBtn.addEventListener('click', function() {
+                qrModal.style.display = 'flex';
+                
+                // إنشاء QR Code
+                const qrcodeElement = document.getElementById('qrcode');
+                qrcodeElement.innerHTML = ''; // مسح أي QR Code موجود مسبقًا
+                
+                new QRCode(qrcodeElement, {
+                    text: window.location.href,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            });
+            
+            // إغلاق النافذة المنبثقة
+            qrClose.addEventListener('click', function() {
+                qrModal.style.display = 'none';
+            });
+            
+            // إغلاق النافذة المنبثقة عند النقر خارجها
+            window.addEventListener('click', function(event) {
+                if (event.target === qrModal) {
+                    qrModal.style.display = 'none';
                 }
             });
             
