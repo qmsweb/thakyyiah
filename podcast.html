@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400..700&family=Readex+Pro:wght@160..700&family=Zain:ital,wght@0,200;0,300;0,400;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         /* Reset وتنسيقات عامة */
         * {
@@ -249,8 +248,10 @@
             cursor: pointer;
         }
 
-        #qrcode {
-            margin: 20px auto;
+        .qr-image {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
         }
 
         .qr-title {
@@ -320,7 +321,7 @@
         <span class="qr-close">&times;</span>
         <div class="qr-content">
             <h3 class="qr-title">مسح رمز QR للمشاركة</h3>
-            <div id="qrcode"></div>
+            <img src="https://dhakiyah.jassim.one/media/qrcode.png" alt="QR Code" class="qr-image">
             <p>قم بمسح الرمز لمشاركة الحلقة مع الأصدقاء</p>
         </div>
     </div>
@@ -357,19 +358,6 @@
             // دالة عرض QR Code
             qrBtn.addEventListener('click', function() {
                 qrModal.style.display = 'flex';
-                
-                // إنشاء QR Code
-                const qrcodeElement = document.getElementById('qrcode');
-                qrcodeElement.innerHTML = ''; // مسح أي QR Code موجود مسبقًا
-                
-                new QRCode(qrcodeElement, {
-                    text: window.location.href,
-                    width: 200,
-                    height: 200,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
             });
             
             // إغلاق النافذة المنبثقة
