@@ -1,37 +1,338 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ذكية</title>
-    <script src="https://code.responsivevoice.org/responsivevoice.js?key=YOUR_KEY"></script>
-    <link rel="stylesheet" href="./styles.css">
+    <title>ذكيّة</title>
+    <link rel="icon" href="media/favi.jpg" type="image/jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400..700&family=Readex+Pro:wght@160..700&family=Zain:ital,wght@0,200;0,300;0,400;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset وتنسيقات عامة */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Markazi Text', 'Zain', 'Readex Pro', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        /* الهيدر والشعار */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            max-width: 120px;
+            height: auto;
+        }
+
+
+       
+
+        .episode-title {
+            color: #333333;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: normal;
+        }
+
+        /* عناصر التحكم الصوتي */
+        .voice-control {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .voice-status {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .listening {
+            background-color: #ffeaa7;
+            color: #d35400;
+        }
+
+        .idle {
+            background-color: #dfe6e9;
+            color: #636e72;
+        }
+
+        .responding {
+            background-color: #55efc4;
+            color: #006266;
+        }
+
+        .voice-transcript {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            min-height: 60px;
+            text-align: center;
+        }
+
+        .voice-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .voice-btn {
+            background-color: #000000;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: 'Readex Pro', sans-serif;
+        }
+
+        .voice-btn:hover {
+            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .voice-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .voice-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+            margin-top: 30px;
+        }
+
+        .footer-logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .copyright {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* التكيف مع الشاشات الصغيرة */
+        @media (min-width: 768px) {
+           
+        @media (max-width: 480px) {
+            .podcast-title {
+                font-size: 1.3rem;
+            }
+            
+            .episode-title {
+                font-size: 1rem;
+            }
+            
+            .voice-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .voice-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <img src="./images/logo.png" alt="ذكية" class="logo">
+            <img src="https://dhakiyah.jassim.one/media/logo-b.png" alt="ذكيَّة" class="logo">
         </header>
-
-        <div class="chat-container">
-            <div class="chat-header">
-                <h2>المساعد الصوتي لعلم النفس التربوي</h2>
-                <p id="status">انقر على الزر للتحدث</p>
+        
+        
+        <div class="voice-control">
+            <h2 style="text-align: center; margin-bottom: 15px;">التحكم الصوتي</h2>
+            <p style="text-align: center; margin-bottom: 15px;">اضغط على الزر للبدء في الاستماع وسأجيبك باستخدام ملفات صوتية</p>
+            
+            <div id="voiceStatus" class="voice-status idle">في انتظار الأمر...</div>
+            
+            <div class="voice-transcript" id="voiceTranscript">
+                النص المسموع سيظهر هنا...
             </div>
-
-            <button id="micButton" class="mic-button" aria-label="زر التحدث">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                </svg>
-            </button>
-
-            <div id="chatMessages" class="chat-messages">
-                <!-- Messages will be added here -->
+            
+            <div class="voice-buttons">
+                <button id="startBtn" class="voice-btn">
+                    <i class="fas fa-microphone"></i> بدء الاستماع
+                </button>
+                <button id="stopBtn" class="voice-btn" disabled>
+                    <i class="fas fa-microphone-slash"></i> إيقاف الاستماع
+                </button>
             </div>
+            
+            <p style="text-align: center; margin-top: 15px; color: #666;">
+                الأوامر المدعومة: "مرحبا"، "كيف حالك"، "ما اسمك"، "شكرا"، "مع السلامة"
+            </p>
         </div>
+        
+        <footer>
+            <img src="https://dhakiyah.jassim.one/media/jassim-b.png" alt="Jassim Logo" class="footer-logo">
+            <p class="copyright">جميع الحقوق محفوظة &copy; 2025</p>
+        </footer>
     </div>
 
-    <script src="./script.js" type="text/javascript"></script>
+    <script>
+        // عناصر DOM
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const voiceStatus = document.getElementById('voiceStatus');
+        const voiceTranscript = document.getElementById('voiceTranscript');
+        
+        // كائن للتعرف على الكلام
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        // تهيئة التعرف على الكلام
+        recognition.lang = 'ar-SA'; // العربية - السعودية
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        
+        // مكتبة الأجوبة الصوتية (من مجلد /voice/)
+        const audioResponses = {
+            'مرحبا': '/voice/response_hello.mp3',
+            'اهلا': '/voice/response_hello.mp3',
+            'السلام عليكم': '/voice/response_hello.mp3',
+            'كيف حالك': '/voice/response_how_are_you.mp3',
+            'ما اسمك': '/voice/response_name.mp3',
+            'شكرا': '/voice/response_thankyou.mp3',
+            'متشكر': '/voice/response_thankyou.mp3',
+            'مع السلامة': '/voice/response_goodbye.mp3',
+            'الى اللقاء': '/voice/response_goodbye.mp3'
+        };
+        
+        // أحداث الأزرار
+        startBtn.addEventListener('click', () => {
+            recognition.start();
+            voiceStatus.className = 'voice-status listening';
+            voiceStatus.textContent = 'جاري الاستماع...';
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            voiceTranscript.textContent = '...';
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            recognition.stop();
+            voiceStatus.className = 'voice-status idle';
+            voiceStatus.textContent = 'في انتظار الأمر...';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+        
+        // معالجة نتائج التعرف على الكلام
+        recognition.onresult = (event) => {
+            const speechResult = event.results[0][0].transcript.trim().toLowerCase();
+            voiceTranscript.textContent = speechResult;
+            
+            // البحث عن أفضل جواب مطابق
+            let bestMatch = null;
+            let bestScore = 0;
+            
+            Object.keys(audioResponses).forEach(key => {
+                const keyLower = key.toLowerCase();
+                const score = similarity(speechResult, keyLower);
+                if (score > bestScore && score > 0.6) { // حد التشابه الأدنى
+                    bestScore = score;
+                    bestMatch = key;
+                }
+            });
+            
+            if (bestMatch) {
+                playAudioResponse(audioResponses[bestMatch]);
+            } else {
+                playAudioResponse('/voice/response_default.mp3');
+            }
+        };
+        
+        // معالجة الأخطاء
+        recognition.onerror = (event) => {
+            console.error('حدث خطأ في التعرف على الكلام:', event.error);
+            voiceStatus.className = 'voice-status idle';
+            voiceStatus.textContent = 'حدث خطأ، يرجى المحاولة مرة أخرى';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        };
+        
+        // تشغيل الملف الصوتي للرد
+        function playAudioResponse(audioFile) {
+            voiceStatus.className = 'voice-status responding';
+            voiceStatus.textContent = 'جاري الرد...';
+            
+            const audio = new Audio(audioFile);
+            audio.play();
+            
+            audio.onended = () => {
+                voiceStatus.className = 'voice-status idle';
+                voiceStatus.textContent = 'في انتظار الأمر...';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            };
+        }
+        
+        // دالة لحساب تشابه الجمل (طريقة مبسطة)
+        function similarity(s1, s2) {
+            const longer = s1.length > s2.length ? s1 : s2;
+            const shorter = s1.length > s2.length ? s2 : s1;
+            
+            if (longer.includes(shorter)) {
+                return shorter.length / longer.length;
+            }
+            
+            let matchCount = 0;
+            const words1 = s1.split(' ');
+            const words2 = s2.split(' ');
+            
+            words1.forEach(word1 => {
+                if (words2.includes(word1)) {
+                    matchCount++;
+                }
+            });
+            
+            return matchCount / Math.max(words1.length, words2.length);
+        }
+    </script>
 </body>
 </html>
