@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ذكيّة</title>
+    <link rel="icon" href="media/favi.jpg" type="image/jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400..700&family=Readex+Pro:wght@160..700&family=Zain:ital,wght@0,200;0,300;0,400;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset وتنسيقات عامة */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Markazi Text', 'Zain', 'Readex Pro', sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0 auto;
+        }
+
+        /* الهيدر والشعار */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            max-width: 120px;
+            height: auto;
+        }
+
+        /* Notebook Style Questions */
+        .questions-section {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+        }
+
+        .notebook {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative;
+            border-left: 1px solid #ddd;
+            margin-bottom: 30px;
+        }
+        
+        .notebook::before {
+            content: "";
+            position: absolute;
+            left: 40px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: #ff9999;
+        }
+        
+        .section-title {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            border-bottom: 2px solid #ff9999;
+            padding-bottom: 10px;
+        }
+        
+        .question {
+            margin-bottom: 20px;
+            padding-right: 20px;
+            position: relative;
+            line-height: 1.6;
+            font-size: 18px;
+            color: #444;
+        }
+        
+        .question::before {
+            content: "•";
+            color: #ff9999;
+            font-size: 24px;
+            position: absolute;
+            right: -15px;
+            top: 0;
+        }
+        
+        .page-number {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f5f5f5;
+            margin-top: 30px;
+        }
+
+        .footer-logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .copyright {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* التكيف مع الشاشات الصغيرة */
+        @media (min-width: 768px) {
+            .container {
+                padding: 40px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .notebook {
+                padding: 20px 15px;
+            }
+            
+            .question {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://dhakiyah.jassim.one/media/logo-b.png" alt="ذكيَّة" class="logo">
+        </header>
+        
+        <div class="questions-section">
+            <div class="notebook">
+                <h2 class="section-title">الأسئلة التي تستطيع ذكية الإجابة عنها</h2>
+                
+                <div class="question">ما هو تعريف الذكاء</div>
+                <div class="question">كيف تختلف نظريات الذكاء التقليدية عن النظريات الحديثة</div>
+                <div class="question">هل توجد علاقة بين الذكاء والتحصيل الدراسي</div>
+                <div class="question">كيف تؤثر الفروق الفردية في الذكاء على أسلوب التدريس</div>
+                <div class="question">كيف يمكن للمعلم التعرف على أنواع الذكاء لدى طلابه</div>
+                <div class="question">كيف نطبق نظرية الذكاءات المتعددة في التدريس</div>
+                <div class="question">كيف ندعم الطلاب الذين يتفوقون في نوع واحد من الذكاء</div>
+                
+                <div class="page-number">صفحة 1</div>
+            </div>
+        </div>
+        
+        <footer>
+            <img src="https://dhakiyah.jassim.one/media/jassim-b.png" alt="Jassim Logo" class="footer-logo">
+            <p class="copyright">جميع الحقوق محفوظة &copy; 2025</p>
+        </footer>
+    </div>
+</body>
+</html>
